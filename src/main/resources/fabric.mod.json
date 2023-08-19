@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "soactf",
+  "version": "${version}",
+
+  "name": "SoaCTF",
+  "description": "CTF mod",
+  "authors": ["Sammwy"],
+  "contact": {
+    "homepage": "https://sammwy.com/",
+    "sources": "https://github.com/sammwyy/soactf"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/soactf/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "client": ["com.sammwy.soactf.client.SoaCTFClient"],
+    "server": ["com.sammwy.soactf.server.SoaCTFServer"]
+  },
+  "mixins": ["soactf.mixins.json"],
+
+  "depends": {
+    "fabricloader": ">=0.14.19",
+    "fabric-api": "*",
+    "minecraft": "~1.19.4",
+    "java": ">=17"
+  }
+}
