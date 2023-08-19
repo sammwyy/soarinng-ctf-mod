@@ -123,6 +123,9 @@ public class Game {
 
             String flagTeamDisplay = flagTeam.getColor().getChatColor() + flagTeam.getName();
             this.broadcastMessage(player.format(this.messages.game.goal).replace("{captured_team}", flagTeamDisplay));
+            playerTeam.broadcastTitle(this.messages.game.goalTitle,
+                    this.messages.game.goalSubtitle);
+            flag.returnFlag();
             return true;
         }
 
@@ -133,7 +136,7 @@ public class Game {
     public GameJoinResult joinPlayer(Player player) {
         CTFTeam team = player.getTeam();
 
-        if (player.isOP()) {
+        if (team == null && player.isOP()) {
             player.setState(PlayerState.SPECTATOR);
             player.teleport(this.arena.spectator);
             return GameJoinResult.SPECTATOR;
@@ -203,6 +206,8 @@ public class Game {
 
             for (CTFTeam team : this.server.getTeamManager().getTeams()) {
                 team.teleportAllPlayersToSpawn();
+                team.getFlag().spawnFlag();
+                team.equipArmorAll();
             }
         }
 

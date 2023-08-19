@@ -10,18 +10,21 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import com.sammwy.soactf.common.Constants;
 import com.sammwy.soactf.common.utils.ArrayUtils;
-import com.sammwy.soactf.server.game.GamePhase;
+import com.sammwy.soactf.server.SoaCTFServer;
+import com.sammwy.soactf.server.teams.CTFTeam;
+import com.sammwy.soactf.server.teams.CTFTeamManager;
 
 import net.minecraft.text.Text;
 
-public class GamePhaseType implements ArgumentType<GamePhase> {
-    public static GamePhaseType gamePhase() {
-        return new GamePhaseType();
+public class TeamType implements ArgumentType<CTFTeam> {
+    public static TeamType team() {
+        return new TeamType();
     }
 
     @Override
-    public GamePhase parse(StringReader reader) throws CommandSyntaxException {
+    public CTFTeam parse(StringReader reader) throws CommandSyntaxException {
         int argBeginning = reader.getCursor();
         if (!reader.canRead()) {
             reader.skip();
@@ -31,23 +34,30 @@ public class GamePhaseType implements ArgumentType<GamePhase> {
             reader.skip();
         }
 
-        String phase = reader.getString().substring(argBeginning, reader.getCursor());
+        String teamID = reader.getString().substring(argBeginning, reader.getCursor());
+        CTFTeamManager teams = SoaCTFServer.getInstance().getTeamManager();
+        CTFTeam team = teams.getTeam(teamID);
 
-        try {
-            return GamePhase.valueOf(phase.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new SimpleCommandExceptionType(Text.literal("No game phase found with this name."))
+        if (team == null) {
+            throw new SimpleCommandExceptionType(Text.literal("Team with this ID doesn't exist."))
                     .createWithContext(reader);
         }
+
+        return team;
     }
 
-    public static <S> GamePhase getGamePhase(String name, CommandContext<S> context) {
-        return context.getArgument(name, GamePhase.class);
+    public static <S> CTFTeam getTeam(String name, CommandContext<S> context) {
+        return context.getArgument(name, CTFTeam.class);
     }
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        List<String> suggestions = ArrayUtils.map(GamePhase.values(), GamePhase::name);
+        if (Constants.IS_CLIENT) {
+            return Suggestions.empty();
+        }
+
+        CTFTeamManager teams = SoaCTFServer.getInstance().getTeamManager();
+        List<String> suggestions = ArrayUtils.map(teams.getTeams(), CTFTeam::getID);
         ArrayUtils.iter(suggestions, builder::suggest);
         return builder.buildFuture();
     }

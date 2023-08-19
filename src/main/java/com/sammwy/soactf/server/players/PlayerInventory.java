@@ -12,7 +12,7 @@ public class PlayerInventory {
     }
 
     public void clearItem(int slot) {
-        this.entity.getInventory().setStack(slot, null);
+        this.entity.getInventory().removeStack(slot);
     }
 
     public void setBoots(ItemStack item) {

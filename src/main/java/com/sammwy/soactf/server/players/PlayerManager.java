@@ -42,6 +42,11 @@ public class PlayerManager {
         return this.players.get(uuid);
     }
 
+    public Player getPlayerByName(String username) {
+        return this.players.values().stream().filter(player -> player.getName().equalsIgnoreCase(username)).findFirst()
+                .orElse(null);
+    }
+
     public Player getPlayer(ServerPlayerEntity entity) {
         return this.getPlayer(entity.getUuidAsString());
     }

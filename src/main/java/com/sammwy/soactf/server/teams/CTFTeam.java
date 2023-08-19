@@ -14,6 +14,7 @@ import com.sammwy.soactf.server.chat.Color;
 import com.sammwy.soactf.server.config.impl.CTFConfiguration;
 import com.sammwy.soactf.server.flags.Flag;
 import com.sammwy.soactf.server.players.Player;
+import com.sammwy.soactf.server.players.PlayerState;
 import com.sammwy.soactf.server.world.BlockPosition;
 import com.sammwy.soactf.server.world.Position;
 
@@ -33,6 +34,7 @@ public class CTFTeam {
     private Position spawn;
     private BlockPosition flagSpawn;
 
+    private CTFConfiguration config;
     private File dataFile;
     private Flag flag;
     private int maxPlayers;
@@ -42,13 +44,13 @@ public class CTFTeam {
     private Team scoreboardTeam;
 
     public CTFTeam(CTFConfiguration config, File dataFile, CTFTeamData data, Scoreboard scoreboard) {
+        this.config = config;
         this.dataFile = dataFile;
-        this.flag = new Flag(this, config.game.time.flagReturn, this.getFlagSpawn());
         this.maxPlayers = config.teams.maxPlayers;
         this.modified = false;
         this.players = new ArrayList<>();
         this.scoreboard = scoreboard;
-        this.scoreboardTeam = scoreboard.addTeam("ctf_team_" + id);
+        this.scoreboardTeam = scoreboard.addTeam("ctf_team_" + data.id);
 
         this.scoreboardTeam.setFriendlyFireAllowed(false);
         this.scoreboardTeam.setShowFriendlyInvisibles(true);
@@ -99,12 +101,30 @@ public class CTFTeam {
         return new ItemStack(this.color.getItem(), 1);
     }
 
+    public void delete() {
+        this.dataFile.delete();
+
+        for (Player player : this.players) {
+            player.setTeam(null);
+
+            if (this.flagSpawn != null) {
+                this.flag.despawnFlag();
+            }
+        }
+    }
+
     public void equipArmor(Player player) {
-        ItemStack helmet = ItemUtils.createColorizedItem(Items.LEATHER_HELMET, this.color.getDyeColor());
-        ItemStack chestplate = ItemUtils.createColorizedItem(Items.LEATHER_CHESTPLATE, this.color.getDyeColor());
-        ItemStack leggings = ItemUtils.createColorizedItem(Items.LEATHER_LEGGINGS, this.color.getDyeColor());
-        ItemStack boots = ItemUtils.createColorizedItem(Items.LEATHER_BOOTS, this.color.getDyeColor());
+        ItemStack helmet = ItemUtils.createColorizedItem(Items.LEATHER_HELMET, this.color);
+        ItemStack chestplate = ItemUtils.createColorizedItem(Items.LEATHER_CHESTPLATE, this.color);
+        ItemStack leggings = ItemUtils.createColorizedItem(Items.LEATHER_LEGGINGS, this.color);
+        ItemStack boots = ItemUtils.createColorizedItem(Items.LEATHER_BOOTS, this.color);
         player.getInventory().equipArmor(helmet, chestplate, leggings, boots);
+    }
+
+    public void equipArmorAll() {
+        for (Player player : this.players) {
+            this.equipArmor(player);
+        }
     }
 
     public Color getColor() {
@@ -190,6 +210,12 @@ public class CTFTeam {
         this.players.add(player);
         this.scoreboard.addPlayerToTeam(player.getName(), scoreboardTeam);
         player.setTeam(this);
+
+        if (this.isAlive()) {
+            player.setState(PlayerState.ALIVE);
+        } else {
+            player.setState(PlayerState.DEAD);
+        }
     }
 
     public void leavePlayer(Player player) {
@@ -240,6 +266,10 @@ public class CTFTeam {
         }
     }
 
+    public Team getScoreboardTeam() {
+        return this.scoreboardTeam;
+    }
+
     public void setAlive(boolean isAlive) {
         this.isAlive = isAlive;
         this.modified = true;
@@ -274,6 +304,11 @@ public class CTFTeam {
     }
 
     public void setFlagSpawn(BlockPosition flagSpawn) {
+        if (this.flag != null) {
+            this.flag.despawnFlag();
+        }
+
+        this.flag = new Flag(this, config.game.time.flagReturn, flagSpawn);
         this.flagSpawn = flagSpawn;
         this.modified = true;
     }

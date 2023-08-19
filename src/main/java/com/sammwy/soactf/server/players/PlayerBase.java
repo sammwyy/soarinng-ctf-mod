@@ -84,6 +84,7 @@ public class PlayerBase {
 
         TitleFadeS2CPacket fadePacket = new TitleFadeS2CPacket(fadeInTicks, stayTicks, fadeOutTicks);
         this.entity.networkHandler.sendPacket(fadePacket);
+
     }
 
     public void setGameMode(GameMode mode) {

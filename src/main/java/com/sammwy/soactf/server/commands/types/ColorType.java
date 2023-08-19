@@ -11,17 +11,17 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.sammwy.soactf.common.utils.ArrayUtils;
-import com.sammwy.soactf.server.game.GamePhase;
+import com.sammwy.soactf.server.chat.Color;
 
 import net.minecraft.text.Text;
 
-public class GamePhaseType implements ArgumentType<GamePhase> {
-    public static GamePhaseType gamePhase() {
-        return new GamePhaseType();
+public class ColorType implements ArgumentType<Color> {
+    public static ColorType color() {
+        return new ColorType();
     }
 
     @Override
-    public GamePhase parse(StringReader reader) throws CommandSyntaxException {
+    public Color parse(StringReader reader) throws CommandSyntaxException {
         int argBeginning = reader.getCursor();
         if (!reader.canRead()) {
             reader.skip();
@@ -34,20 +34,20 @@ public class GamePhaseType implements ArgumentType<GamePhase> {
         String phase = reader.getString().substring(argBeginning, reader.getCursor());
 
         try {
-            return GamePhase.valueOf(phase.toUpperCase());
+            return Color.valueOf(phase.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new SimpleCommandExceptionType(Text.literal("No game phase found with this name."))
+            throw new SimpleCommandExceptionType(Text.literal("No color found with this name."))
                     .createWithContext(reader);
         }
     }
 
-    public static <S> GamePhase getGamePhase(String name, CommandContext<S> context) {
-        return context.getArgument(name, GamePhase.class);
+    public static <S> Color getColor(String name, CommandContext<S> context) {
+        return context.getArgument(name, Color.class);
     }
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        List<String> suggestions = ArrayUtils.map(GamePhase.values(), GamePhase::name);
+        List<String> suggestions = ArrayUtils.map(Color.values(), Color::name);
         ArrayUtils.iter(suggestions, builder::suggest);
         return builder.buildFuture();
     }

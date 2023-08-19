@@ -90,6 +90,10 @@ public class Position {
         return new BlockPos((int) this.x, (int) this.y, (int) this.z);
     }
 
+    public String toString() {
+        return "(" + this.x + ", " + this.y + ", " + this.z + ") [y=" + this.yaw + ", p=" + this.pitch + "]";
+    }
+
     public static Position fromBlockPos(BlockPos pos) {
         return new Position(pos.getX(), pos.getY(), pos.getZ());
     }

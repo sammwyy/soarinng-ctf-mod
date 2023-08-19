@@ -6,12 +6,10 @@ import com.sammwy.soactf.server.events.block.BlockInteractEvent;
 import com.sammwy.soactf.server.events.player.PlayerDisconnectEvent;
 import com.sammwy.soactf.server.events.player.PlayerJoinEvent;
 import com.sammwy.soactf.server.flags.Flag;
-import com.sammwy.soactf.server.flags.FlagCaptureResult;
 import com.sammwy.soactf.server.flags.FlagState;
 import com.sammwy.soactf.server.players.Player;
 import com.sammwy.soactf.server.teams.CTFTeam;
 
-import net.minecraft.item.BannerItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.ClientConnection;
@@ -49,33 +47,20 @@ public class SoaCTFHandler {
             return;
         }
 
-        if (!player.isPlaying()) {
-            e.cancel();
-            player.sendMessage("&cNo puedes romper bloques en este estado.");
-            return;
-        }
+        e.cancel();
 
-        if (!e.getBlock().getName().getString().toLowerCase().contains("banner")) {
-            e.cancel();
-            player.sendMessage("&cNo puedes romper el mapa.");
+        if (!this.server.getGame().isRunning() || !player.isPlaying()
+                || !e.getBlock().getName().getString().toLowerCase().contains("banner")) {
             return;
         }
 
         Flag flag = this.server.getGame().getFlagAt(e.getBlockPos());
 
         if (flag == null) {
-            e.cancel();
-            player.sendMessage("&cNo puedes romper el mapa.");
             return;
         }
 
-        FlagCaptureResult result = flag.capture(player);
-
-        if (result == FlagCaptureResult.CANNOT_CAPTURE_OWN_FLAG) {
-            e.cancel();
-            player.sendMessage("&cNo puedes capturar tu propia bandera.");
-            return;
-        }
+        this.server.getGame().captureFlag(player, flag);
     }
 
     @Listener
@@ -89,19 +74,19 @@ public class SoaCTFHandler {
             return;
         }
 
-        if (player.isPlaying() || item == null || item == Items.AIR || !(item instanceof BannerItem)) {
-            e.cancel();
+        e.cancel();
+
+        if (!this.server.getGame().isRunning() || !player.isPlaying() || item == null || item == Items.AIR
+                || !item.getName().getString().toLowerCase().contains("banner")) {
+
             return;
         }
 
         if (team.getFlag().getState() == FlagState.SAFE) {
             double distance = team.getFlagSpawn().distance(blockPos);
-
-            if (distance <= 3) {
+            if (distance <= 2D) {
                 this.server.getGame().goal(player);
             }
         }
-
-        e.cancel();
     }
 }

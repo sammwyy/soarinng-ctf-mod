@@ -30,6 +30,12 @@ public class BlockPosition {
         this.z = position.z;
     }
 
+    public BlockPosition(Position position) {
+        this.x = (int) position.x;
+        this.y = (int) position.y;
+        this.z = (int) position.z;
+    }
+
     public BlockPosition() {
         this(0, 0, 0);
     }
@@ -62,27 +68,12 @@ public class BlockPosition {
         return this;
     }
 
-    public double distance(BlockPosition position) {
-        return Math.sqrt(Math.pow(this.x - position.x, 2) + Math.pow(this.y - position.y, 2)
-                + Math.pow(this.z - position.z, 2));
-    }
-
-    public double distance(Position position) {
-        return Math.sqrt(Math.pow(this.x - position.x, 2) + Math.pow(this.y - position.y, 2)
-                + Math.pow(this.z - position.z, 2));
-    }
-
     public double distance(BlockPos pos) {
-        return Math.sqrt(Math.pow(this.x - pos.getX(), 2) + Math.pow(this.y - pos.getY(), 2)
-                + Math.pow(this.z - pos.getZ(), 2));
-    }
+        double dX = Math.abs(this.x - pos.getX());
+        double dY = Math.abs(this.y - pos.getY());
+        double dZ = Math.abs(this.z - pos.getZ());
 
-    public double distanceSquared(BlockPosition position) {
-        return Math.pow(this.x - position.x, 2) + Math.pow(this.y - position.y, 2) + Math.pow(this.z - position.z, 2);
-    }
-
-    public double distanceSquared(Position position) {
-        return Math.pow(this.x - position.x, 2) + Math.pow(this.y - position.y, 2) + Math.pow(this.z - position.z, 2);
+        return (dX + dY + dZ) / 3.0D;
     }
 
     public BlockPosition clone() {
@@ -109,6 +100,10 @@ public class BlockPosition {
 
     public boolean equals(BlockPosition position) {
         return this.x == position.x && this.y == position.y && this.z == position.z;
+    }
+
+    public String toString() {
+        return "(" + this.x + ", " + this.y + ", " + this.z + ")";
     }
 
     public static BlockPosition fromBlockPos(BlockPos pos) {

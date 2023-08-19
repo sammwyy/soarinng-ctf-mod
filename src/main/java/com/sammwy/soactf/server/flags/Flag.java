@@ -1,6 +1,7 @@
 package com.sammwy.soactf.server.flags;
 
 import com.sammwy.soactf.common.utils.PositionUtils;
+import com.sammwy.soactf.common.utils.WorldUtils;
 import com.sammwy.soactf.server.players.Player;
 import com.sammwy.soactf.server.teams.CTFTeam;
 import com.sammwy.soactf.server.world.BlockPosition;
@@ -14,7 +15,6 @@ import net.minecraft.util.math.BlockPos;
 
 public class Flag {
     private CTFTeam team;
-    private ServerWorld world;
     private BlockPosition flagSpawn;
     private BlockPosition currentPosition;
     private Player capturedBy;
@@ -26,37 +26,37 @@ public class Flag {
     public Flag(CTFTeam team, int returnTimer, BlockPosition flagSpawn) {
         this.team = team;
         this.flagSpawn = flagSpawn;
-        this.currentPosition = flagSpawn.clone();
+        this.currentPosition = flagSpawn != null ? flagSpawn.clone() : null;
         this.state = FlagState.SAFE;
         this.returnTimer = returnTimer;
         this.currentReturnTimer = -1;
     }
 
-    public void setWorld(ServerWorld world) {
-        this.world = world;
+    public ServerWorld getWorld() {
+        return WorldUtils.getDefaultWorld();
     }
 
     public void despawnFlag() {
-        if (this.world == null) {
+        if (this.getWorld() == null) {
             throw new IllegalStateException("Cannot despawn flag without a world");
         }
 
         if (this.currentPosition != null) {
-            this.world.setBlockState(this.currentPosition.toBlockPos(),
+            this.getWorld().setBlockState(this.currentPosition.toBlockPos(),
                     Block.getBlockFromItem(Items.AIR).getDefaultState());
         }
     }
 
     public void spawnFlag() {
-        if (this.world == null) {
+        if (this.getWorld() == null) {
             throw new IllegalStateException("Cannot spawn flag without a world");
         }
 
-        this.world.setBlockState(this.currentPosition.toBlockPos(),
+        this.getWorld().setBlockState(this.currentPosition.toBlockPos(),
                 this.getBlock().getDefaultState());
     }
 
-    public boolean returnFlag() {
+    public void returnFlag() {
         if (this.state == FlagState.DROPPED) {
             this.despawnFlag();
         } else if (this.state == FlagState.CARRIED) {
@@ -69,18 +69,17 @@ public class Flag {
         this.currentPosition = this.flagSpawn;
         this.state = FlagState.SAFE;
         this.spawnFlag();
-        return false;
     }
 
     public boolean dropFlag(Player player) {
-        if (this.world == null) {
+        if (this.getWorld() == null) {
             throw new IllegalStateException("Cannot drop flag without a world");
         }
 
         player.setCapturedFlag(null);
         this.capturedBy = null;
 
-        BlockPosition safePosition = PositionUtils.getSafeBlockPosition(this.world, player.getPosition());
+        BlockPosition safePosition = PositionUtils.getSafeBlockPosition(this.getWorld(), player.getPosition());
 
         if (safePosition == null) {
             this.returnFlag();

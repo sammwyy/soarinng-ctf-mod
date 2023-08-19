@@ -71,4 +71,14 @@ public class CTFTeamManager {
             this.addTeam(team);
         }
     }
+
+    public void removeTeam(CTFTeam team) {
+        this.teams.remove(team.getID());
+        this.scoreboard.removeTeam(team.getScoreboardTeam());
+    }
+
+    public void deleteTeam(CTFTeam team) {
+        this.removeTeam(team);
+        team.delete();
+    }
 }

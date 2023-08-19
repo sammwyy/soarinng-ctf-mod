@@ -40,7 +40,7 @@ public class CTFMessagesConfig extends Configuration {
 
         @Expose
         @SerializedName("goal")
-        public String goal = "{player} &7anoto un punto capturando la bandera {captured_team}&7.";
+        public String goal = "{player_display} &7anoto un punto capturando la bandera {captured_team}&7.";
 
         @Expose
         @SerializedName("goal_title")

@@ -3,9 +3,12 @@ package com.sammwy.soactf.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sammwy.soactf.common.Constants;
+import com.sammwy.soactf.common.Initializer;
 import com.sammwy.soactf.common.utils.FabricUtils;
+import com.sammwy.soactf.common.utils.WorldUtils;
 import com.sammwy.soactf.server.commands.CTFCommand;
-import com.sammwy.soactf.server.commands.types.GamePhaseType;
+import com.sammwy.soactf.server.commands.CTFTeamCommand;
 import com.sammwy.soactf.server.config.ConfigManager;
 import com.sammwy.soactf.server.config.impl.CTFArenaConfig;
 import com.sammwy.soactf.server.config.impl.CTFConfiguration;
@@ -17,16 +20,14 @@ import com.sammwy.soactf.server.tasks.TaskScheduler;
 import com.sammwy.soactf.server.teams.CTFTeamManager;
 
 import net.fabricmc.api.DedicatedServerModInitializer;
-import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
-import net.minecraft.util.Identifier;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.minecraft.world.World;
 
 public class SoaCTFServer implements DedicatedServerModInitializer {
     // Constants.
-    public static final String MOD_ID = "soactf";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final Logger LOGGER = LoggerFactory.getLogger(Constants.MOD_ID);
 
     // Managers.
     private ConfigManager configManager;
@@ -89,12 +90,13 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
     public void onInitializeServer() {
         // Set static instance.
         INSTANCE = this;
+        Initializer.initAll();
 
         // Instantiate managers.
-        this.configManager = new ConfigManager(FabricUtils.getConfigDir(MOD_ID));
+        this.configManager = new ConfigManager(FabricUtils.getConfigDir(Constants.MOD_ID));
         this.eventManager = new EventManager();
-        this.playerManager = new PlayerManager(this, FabricUtils.getConfigDir(MOD_ID, "players"));
-        this.teamManager = new CTFTeamManager(this, FabricUtils.getConfigDir(MOD_ID, "teams"));
+        this.playerManager = new PlayerManager(this, FabricUtils.getConfigDir(Constants.MOD_ID, "players"));
+        this.teamManager = new CTFTeamManager(this, FabricUtils.getConfigDir(Constants.MOD_ID, "teams"));
 
         // Load data.
         this.teamManager.loadTeams();
@@ -110,17 +112,22 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
             this.game.tick();
         }, 20L);
 
-        // Register argument types.
-        ArgumentTypeRegistry.registerArgumentType(new Identifier(MOD_ID, "game_phase"), GamePhaseType.class,
-                ConstantArgumentSerializer.of(GamePhaseType::gamePhase));
-
         // Register events.
+        CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) -> {
+            new CTFCommand(this).register(dispatcher);
+            new CTFTeamCommand(this).register(dispatcher);
+        });
+
         ServerTickEvents.START_SERVER_TICK.register(server -> {
             this.taskScheduler.tick();
         });
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) -> {
-            new CTFCommand(this).register(dispatcher);
+        ServerWorldEvents.LOAD.register((server, world) -> {
+            if (world.getRegistryKey() != World.OVERWORLD) {
+                return;
+            }
+
+            WorldUtils.setDefaultWorld(world);
         });
 
         // Register handlers.

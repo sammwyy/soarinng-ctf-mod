@@ -109,6 +109,7 @@ public class Player extends PlayerBase {
         }
 
         return string.replace("{player_name}", this.getName())
+                .replace("{player_display}", this.getDisplayName())
                 .replace("{player_captures}", String.valueOf(captures))
                 .replace("{player_deaths}", String.valueOf(deaths))
                 .replace("{player_kills}", String.valueOf(kills))
@@ -248,7 +249,7 @@ public class Player extends PlayerBase {
         } else {
             this.getInventory().clearItem(3);
             this.getInventory()
-                    .setHelmet(ItemUtils.createColorizedItem(Items.LEATHER_HELMET, this.team.getColor().getDyeColor()));
+                    .setHelmet(ItemUtils.createColorizedItem(Items.LEATHER_HELMET, this.team.getColor()));
         }
     }
 
@@ -264,7 +265,7 @@ public class Player extends PlayerBase {
         if (this.isSpectator()) {
             this.setGameMode(GameMode.SPECTATOR);
         } else {
-            this.setGameMode(GameMode.ADVENTURE);
+            this.setGameMode(GameMode.SURVIVAL);
         }
     }
 
