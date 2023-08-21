@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.sammwy.soactf.server.SoaCTFServer;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.network.ServerPlayerEntity;
 
@@ -47,7 +48,7 @@ public class PlayerManager {
                 .orElse(null);
     }
 
-    public Player getPlayer(ServerPlayerEntity entity) {
+    public Player getPlayer(PlayerEntity entity) {
         return this.getPlayer(entity.getUuidAsString());
     }
 

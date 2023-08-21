@@ -33,7 +33,7 @@ public enum Color {
     private Color(String charCode, String hex, Block block, Item item) {
         this.charCode = charCode;
         this.hex = hex;
-        this.decimal = Integer.parseInt(hex.substring(1), 16);
+        this.decimal = Integer.parseInt(hex, 16);
         this.block = block;
         this.item = item;
     }

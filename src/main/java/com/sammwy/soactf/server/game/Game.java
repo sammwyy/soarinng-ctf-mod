@@ -168,6 +168,7 @@ public class Game {
         else if (this.phase == GamePhase.IN_GAME) {
             if (team != null) {
                 player.teleport(team.getSpawn());
+                team.glow();
                 return GameJoinResult.JOINED;
             }
         }
@@ -186,7 +187,18 @@ public class Game {
         return GameJoinResult.SPECTATOR;
     }
 
+    public void killTeam(CTFTeam team) {
+        team.kill();
+        this.server.getGame().broadcastMessage(
+                this.messages.game.teamKilled.replace("{team_killed}", team.getDisplayName()));
+    }
+
     public void leavePlayer(Player player) {
+        Flag flag = player.getCapturedFlag();
+        if (flag != null) {
+            flag.returnFlag();
+        }
+
         CTFTeam team = player.getTeam();
         if (team != null) {
             team.leavePlayer(player);
@@ -208,6 +220,7 @@ public class Game {
                 team.teleportAllPlayersToSpawn();
                 team.getFlag().spawnFlag();
                 team.equipArmorAll();
+                team.glow();
             }
         }
 

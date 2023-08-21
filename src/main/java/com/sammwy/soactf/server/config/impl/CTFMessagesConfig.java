@@ -51,6 +51,14 @@ public class CTFMessagesConfig extends Configuration {
         public String goalSubtitle = "&7Tu equipo ahora tiene &a{team_points} &7puntos";
 
         @Expose
+        @SerializedName("respawn_title")
+        public String respawnTitle = "&cHas muerto";
+
+        @Expose
+        @SerializedName("respawn_subtitle")
+        public String respawnSubtitle = "&7Reapareceras en &a{player_respawn_time} &7segundos";
+
+        @Expose
         public String starting = "&7El juego comenzara en &a{game_time} &7segundos.";
 
         @Expose
@@ -61,6 +69,10 @@ public class CTFMessagesConfig extends Configuration {
 
         @Expose
         public String finished = "&dEl juego ha terminado!";
+
+        @Expose
+        @SerializedName("team_killed")
+        public String teamKilled = "&7El equipo {team_killed} &7ha sido eliminado!";
 
         @Expose
         public String actionbar = "&e{game_time}";

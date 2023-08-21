@@ -77,7 +77,7 @@ public class CTFTeam {
     }
 
     public int addPoint() {
-        this.points++;
+        this.setPoints(this.points + 1);
         return this.points;
     }
 
@@ -168,6 +168,9 @@ public class CTFTeam {
         return this.flagSpawn;
     }
 
+    public void glow() {
+    }
+
     public boolean hasCachedPlayer(String uuid) {
         for (String rawPlayer : this.rawPlayers) {
             if (rawPlayer.equals(uuid)) {
@@ -216,6 +219,14 @@ public class CTFTeam {
         } else {
             player.setState(PlayerState.DEAD);
         }
+    }
+
+    public void kill() {
+        for (Player player : this.players) {
+            player.kill(true);
+        }
+
+        this.setAlive(false);
     }
 
     public void leavePlayer(Player player) {

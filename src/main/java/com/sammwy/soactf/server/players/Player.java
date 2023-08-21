@@ -178,19 +178,42 @@ public class Player extends PlayerBase {
         return this.state == PlayerState.SPECTATOR;
     }
 
-    public void kill(boolean gameOver) {
+    public boolean kill(boolean gameOver) {
+        if (this.state == PlayerState.DEAD || this.state == PlayerState.RESPAWNING
+                || this.state == PlayerState.SPECTATOR) {
+            return false;
+        }
+
         this.setState(gameOver ? PlayerState.DEAD : PlayerState.RESPAWNING);
-        this.setHealth(20);
         this.modified = true;
+
+        if (this.capturedFlag != null) {
+            if (gameOver)
+                this.capturedFlag.returnFlag();
+            else
+                this.capturedFlag.dropFlag(this);
+        }
+
+        return true;
+    }
+
+    public void prepareRespawn() {
+        if (this.state != PlayerState.RESPAWNING) {
+            return;
+        }
+
+        this.respawnTime = this.server.getConfig().game.time.respawn;
+        this.setGameMode(GameMode.SPECTATOR);
     }
 
     public void respawn() {
-        this.setState(PlayerState.ALIVE);
         this.setHealth(20);
+        this.setState(PlayerState.ALIVE);
         if (this.team != null) {
             this.team.equipArmor(this);
             this.teleport(this.team.getSpawn());
         }
+        this.respawnTime = -1;
         this.modified = true;
     }
 
@@ -262,7 +285,7 @@ public class Player extends PlayerBase {
         this.state = state;
         this.modified = true;
 
-        if (this.isSpectator()) {
+        if (state == PlayerState.SPECTATOR || state == PlayerState.DEAD) {
             this.setGameMode(GameMode.SPECTATOR);
         } else {
             this.setGameMode(GameMode.SURVIVAL);
@@ -270,7 +293,14 @@ public class Player extends PlayerBase {
     }
 
     public void tickRespawnTime() {
+        if (this.respawnTime == 0) {
+            this.respawn();
+        }
+
         if (this.respawnTime > 0) {
+            this.sendTitle(this.server.getMessages().game.respawnTitle, this.server.getMessages().game.respawnSubtitle,
+                    0, 20, 0);
+
             this.respawnTime--;
         }
     }

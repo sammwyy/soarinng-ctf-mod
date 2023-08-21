@@ -3,18 +3,26 @@ package com.sammwy.soactf.server;
 import com.sammwy.soactf.server.events.Listener;
 import com.sammwy.soactf.server.events.block.BlockBreakEvent;
 import com.sammwy.soactf.server.events.block.BlockInteractEvent;
+import com.sammwy.soactf.server.events.entity.EntityTakeDamageEvent;
+import com.sammwy.soactf.server.events.player.PlayerAttackEntityEvent;
+import com.sammwy.soactf.server.events.player.PlayerBeforeDeathEvent;
+import com.sammwy.soactf.server.events.player.PlayerDeathEvent;
 import com.sammwy.soactf.server.events.player.PlayerDisconnectEvent;
 import com.sammwy.soactf.server.events.player.PlayerJoinEvent;
+import com.sammwy.soactf.server.events.player.PlayerRespawnEvent;
 import com.sammwy.soactf.server.flags.Flag;
 import com.sammwy.soactf.server.flags.FlagState;
 import com.sammwy.soactf.server.players.Player;
 import com.sammwy.soactf.server.teams.CTFTeam;
 
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameMode;
 
 public class SoaCTFHandler {
     private SoaCTFServer server;
@@ -43,7 +51,7 @@ public class SoaCTFHandler {
     public void onBlockBreak(BlockBreakEvent e) {
         Player player = this.server.getPlayerManager().getPlayer(e.getEntity());
 
-        if (player.isOP() && player.isSpectator()) {
+        if (player.isOP() && (player.isSpectator() || player.getGameMode() == GameMode.CREATIVE)) {
             return;
         }
 
@@ -65,12 +73,16 @@ public class SoaCTFHandler {
 
     @Listener
     public void onBlockInteract(BlockInteractEvent e) {
+        if (e.getHand() == null || e.getHand() == Hand.OFF_HAND) {
+            return;
+        }
+
         Player player = this.server.getPlayerManager().getPlayer(e.getEntity());
         CTFTeam team = player.getTeam();
         BlockPos blockPos = e.getHitResult().getBlockPos();
         Item item = e.getStack().getItem();
 
-        if (player.isOP() && player.isSpectator()) {
+        if (player.isOP() && (player.isSpectator() || player.getGameMode() == GameMode.CREATIVE)) {
             return;
         }
 
@@ -86,6 +98,110 @@ public class SoaCTFHandler {
             double distance = team.getFlagSpawn().distance(blockPos);
             if (distance <= 2D) {
                 this.server.getGame().goal(player);
+            }
+        }
+    }
+
+    @Listener
+    public void onPlayerDeath(PlayerDeathEvent e) {
+        Player player = this.server.getPlayerManager().getPlayer(e.getEntity());
+
+        if (player.isOP() && player.isSpectator()) {
+            return;
+        }
+
+        if (!this.server.getGame().isRunning() || !player.isPlaying()) {
+            return;
+        }
+
+        if (e.getSource().getAttacker() instanceof ServerPlayerEntity attackerEntity) {
+            Player attacker = this.server.getPlayerManager().getPlayer(attackerEntity);
+            attacker.addKill();
+        }
+
+        player.kill();
+    }
+
+    @Listener
+    public void onPlayerRespawn(PlayerRespawnEvent e) {
+        Player player = this.server.getPlayerManager().getPlayer(e.getOldEntity());
+        player.update(e.getNewEntity());
+        player.prepareRespawn();
+    }
+
+    @Listener
+    public void onPlayerBeforeDeath(PlayerBeforeDeathEvent e) {
+        Player player = this.server.getPlayerManager().getPlayer(e.getEntity());
+
+        player.sendMessage("&cPAPSPAPA");
+
+        if (player.isOP() && player.isSpectator()) {
+            return;
+        }
+
+        e.cancel();
+
+        if (!this.server.getGame().isRunning() || !player.isPlaying()) {
+            return;
+        }
+
+        if (player.kill(false)) {
+            player.prepareRespawn();
+
+            if (e.getSource().getAttacker() instanceof ServerPlayerEntity attackerEntity) {
+                Player attacker = this.server.getPlayerManager().getPlayer(attackerEntity);
+                attacker.addKill();
+            }
+        }
+    }
+
+    @Listener
+    public void onPlayerAttackEntity(PlayerAttackEntityEvent e) {
+        Player player = this.server.getPlayerManager().getPlayer(e.getPlayer());
+
+        if (player.isOP() && player.isSpectator()) {
+            return;
+        }
+
+        if (!this.server.getGame().isRunning() || !player.isPlaying()) {
+            e.cancel();
+            return;
+        }
+
+        if (e.getEntity() instanceof ServerPlayerEntity entity) {
+            Player target = this.server.getPlayerManager().getPlayer(entity);
+            if (player.getTeam() == target.getTeam()) {
+                e.cancel();
+            }
+        }
+    }
+
+    @Listener
+    public void onEntityTakeDamage(EntityTakeDamageEvent e) {
+        if (e.getEntity() instanceof ServerPlayerEntity entity) {
+            Player player = this.server.getPlayerManager().getPlayer(entity);
+
+            if (player.isOP() && player.isSpectator()) {
+                e.cancel();
+                return;
+            }
+
+            if (!this.server.getGame().isRunning() || !player.isPlaying()) {
+                e.cancel();
+                return;
+            }
+
+            if (e.getSource().isOf(DamageTypes.FALL) && !this.server.getConfig().game.fallDamage) {
+                e.cancel();
+                return;
+            }
+
+            if (e.getSource().isOf(DamageTypes.OUT_OF_WORLD)) {
+                player.kill(false);
+                player.prepareRespawn();
+                player.teleport(this.server.getArenaConfig().spectator);
+                e.cancel();
+                return;
             }
         }
     }

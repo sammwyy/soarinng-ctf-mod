@@ -14,6 +14,9 @@ import com.sammwy.soactf.server.config.impl.CTFArenaConfig;
 import com.sammwy.soactf.server.config.impl.CTFConfiguration;
 import com.sammwy.soactf.server.config.impl.CTFMessagesConfig;
 import com.sammwy.soactf.server.events.EventManager;
+import com.sammwy.soactf.server.events.player.PlayerAttackEntityEvent;
+import com.sammwy.soactf.server.events.player.PlayerBeforeDeathEvent;
+import com.sammwy.soactf.server.events.player.PlayerRespawnEvent;
 import com.sammwy.soactf.server.game.Game;
 import com.sammwy.soactf.server.players.PlayerManager;
 import com.sammwy.soactf.server.tasks.TaskScheduler;
@@ -21,8 +24,13 @@ import com.sammwy.soactf.server.teams.CTFTeamManager;
 
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.ActionResult;
 import net.minecraft.world.World;
 
 public class SoaCTFServer implements DedicatedServerModInitializer {
@@ -112,10 +120,36 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
             this.game.tick();
         }, 20L);
 
-        // Register events.
+        // Register commands.
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) -> {
             new CTFCommand(this).register(dispatcher);
             new CTFTeamCommand(this).register(dispatcher);
+        });
+
+        // Register events.
+        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, damage) -> {
+            if (entity instanceof ServerPlayerEntity playerEntity) {
+                PlayerBeforeDeathEvent event = new PlayerBeforeDeathEvent(playerEntity, source, damage);
+                this.eventManager.call(event);
+
+                if (event.isCancelled()) {
+                    entity.setHealth(1);
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+            PlayerAttackEntityEvent event = new PlayerAttackEntityEvent(player, world, hand, entity, hitResult);
+            this.eventManager.call(event);
+            return event.isCancelled() ? ActionResult.FAIL : ActionResult.PASS;
+        });
+
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+            PlayerRespawnEvent event = new PlayerRespawnEvent(oldPlayer, newPlayer, alive);
+            this.eventManager.call(event);
         });
 
         ServerTickEvents.START_SERVER_TICK.register(server -> {

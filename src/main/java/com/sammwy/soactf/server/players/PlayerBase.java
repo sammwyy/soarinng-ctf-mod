@@ -4,6 +4,7 @@ import com.sammwy.soactf.common.utils.TextUtils;
 import com.sammwy.soactf.server.world.Position;
 
 import net.minecraft.network.ClientConnection;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
 import net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket;
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
@@ -28,6 +29,10 @@ public class PlayerBase {
 
     public ServerPlayerEntity getEntity() {
         return this.entity;
+    }
+
+    public int getEntityId() {
+        return this.entity.getId();
     }
 
     public GameMode getGameMode() {
@@ -75,6 +80,10 @@ public class PlayerBase {
         this.entity.sendMessage(TextUtils.from(message), false);
     }
 
+    public void sendPacket(Packet<?> packet) {
+        this.entity.networkHandler.sendPacket(packet);
+    }
+
     public void sendTitle(String title, String subtitle, int fadeInTicks, int stayTicks, int fadeOutTicks) {
         TitleS2CPacket titlePacket = new TitleS2CPacket(TextUtils.from(title));
         this.entity.networkHandler.sendPacket(titlePacket);
@@ -108,5 +117,10 @@ public class PlayerBase {
         float yaw = position.yaw;
         float pitch = position.pitch;
         this.entity.teleport(world, x, y, z, yaw, pitch);
+    }
+
+    public void update(ServerPlayerEntity entity) {
+        this.entity = entity;
+        this.inventory = new PlayerInventory(entity);
     }
 }

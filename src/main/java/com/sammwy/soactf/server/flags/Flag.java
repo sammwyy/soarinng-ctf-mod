@@ -100,31 +100,24 @@ public class Flag {
             return FlagCaptureResult.CANNOT_CAPTURE_OWN_FLAG;
         }
 
-        else if (this.state == FlagState.SAFE && !own) {
+        else if ((this.state == FlagState.SAFE || this.state == FlagState.DROPPED) && !own) {
+            if (this.capturedBy != null) {
+                this.capturedBy.setCapturedFlag(null);
+            }
+
+            boolean dropped = this.state == FlagState.DROPPED;
             this.despawnFlag();
             this.capturedBy = player;
             this.currentPosition = null;
             this.state = FlagState.CARRIED;
             player.setCapturedFlag(this);
-            return FlagCaptureResult.CAPTURED;
+            return dropped ? FlagCaptureResult.CAPTURED_DROPPED : FlagCaptureResult.CAPTURED;
         }
 
         else if (this.state == FlagState.DROPPED && own) {
             this.returnFlag();
             this.returnedBy = player;
             return FlagCaptureResult.RETURNED;
-        }
-
-        else if (this.state == FlagState.DROPPED && !own) {
-            if (this.capturedBy != null) {
-                this.capturedBy.setCapturedFlag(null);
-            }
-
-            this.despawnFlag();
-            this.currentPosition = null;
-            this.capturedBy = player;
-            player.setCapturedFlag(this);
-            return FlagCaptureResult.CAPTURED_DROPPED;
         }
 
         else {
@@ -171,6 +164,8 @@ public class Flag {
     public boolean isFlag(BlockPos pos) {
         if (this.state == FlagState.SAFE) {
             return this.flagSpawn.toBlockPos().equals(pos);
+        } else if (this.currentPosition == null) {
+            return false;
         } else {
             return this.currentPosition.toBlockPos().equals(pos);
         }
