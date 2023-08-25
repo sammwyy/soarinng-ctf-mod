@@ -8,10 +8,12 @@ import com.sammwy.soactf.server.events.player.PlayerAttackEntityEvent;
 import com.sammwy.soactf.server.events.player.PlayerBeforeDeathEvent;
 import com.sammwy.soactf.server.events.player.PlayerDeathEvent;
 import com.sammwy.soactf.server.events.player.PlayerDisconnectEvent;
+import com.sammwy.soactf.server.events.player.PlayerFoodLevelChangeEvent;
 import com.sammwy.soactf.server.events.player.PlayerJoinEvent;
 import com.sammwy.soactf.server.events.player.PlayerRespawnEvent;
 import com.sammwy.soactf.server.flags.Flag;
 import com.sammwy.soactf.server.flags.FlagState;
+import com.sammwy.soactf.server.loots.LootBox;
 import com.sammwy.soactf.server.players.Player;
 import com.sammwy.soactf.server.teams.CTFTeam;
 
@@ -50,25 +52,38 @@ public class SoaCTFHandler {
     @Listener
     public void onBlockBreak(BlockBreakEvent e) {
         Player player = this.server.getPlayerManager().getPlayer(e.getEntity());
+        boolean isSponge = e.getBlock().asItem() == Items.SPONGE;
+        boolean isBanner = e.getBlock().getName().getString().toLowerCase().contains("banner");
 
         if (player.isOP() && (player.isSpectator() || player.getGameMode() == GameMode.CREATIVE)) {
+            if (isSponge && this.server.getLootBoxManager().remove(e.getBlockPos())) {
+                player.sendMessage("&aHas removido esta caja de botin.");
+            }
+
             return;
         }
 
         e.cancel();
 
-        if (!this.server.getGame().isRunning() || !player.isPlaying()
-                || !e.getBlock().getName().getString().toLowerCase().contains("banner")) {
+        if (!this.server.getGame().isRunning() || !player.isPlaying()) {
             return;
         }
 
-        Flag flag = this.server.getGame().getFlagAt(e.getBlockPos());
-
-        if (flag == null) {
-            return;
+        if (isSponge) {
+            LootBox box = this.server.getLootBoxManager().getAt(e.getBlockPos());
+            if (box != null) {
+                boolean result = box.claim();
+                if (!result) {
+                    player.sendMessage("&cEsta caja de botín se encuentra en enfriamiento.");
+                }
+            }
+        } else if (isBanner) {
+            Flag flag = this.server.getGame().getFlagAt(e.getBlockPos());
+            if (flag != null) {
+                this.server.getGame().captureFlag(player, flag);
+                player.getInventory().sync();
+            }
         }
-
-        this.server.getGame().captureFlag(player, flag);
     }
 
     @Listener
@@ -96,9 +111,11 @@ public class SoaCTFHandler {
 
         if (team.getFlag().getState() == FlagState.SAFE) {
             double distance = team.getFlagSpawn().distance(blockPos);
-            if (distance <= 2D) {
+            if (distance <= 7D) {
                 this.server.getGame().goal(player);
             }
+        } else {
+            player.sendMessage("&cTu bandera no se encuentra en su base.");
         }
     }
 
@@ -132,8 +149,6 @@ public class SoaCTFHandler {
     @Listener
     public void onPlayerBeforeDeath(PlayerBeforeDeathEvent e) {
         Player player = this.server.getPlayerManager().getPlayer(e.getEntity());
-
-        player.sendMessage("&cPAPSPAPA");
 
         if (player.isOP() && player.isSpectator()) {
             return;
@@ -203,6 +218,13 @@ public class SoaCTFHandler {
                 e.cancel();
                 return;
             }
+        }
+    }
+
+    @Listener
+    public void onPlayerFoodLevelChange(PlayerFoodLevelChangeEvent e) {
+        if (this.server.getConfig().game.disableHunger) {
+            e.setNewFoodLevel(20);
         }
     }
 }

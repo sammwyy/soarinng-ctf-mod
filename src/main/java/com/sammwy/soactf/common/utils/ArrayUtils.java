@@ -7,6 +7,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ArrayUtils {
+    public static <E> E random(List<E> list) {
+        int min = 0;
+        int max = list.size() - 1;
+        int index = RandomUtils.getRandomInt(min, max);
+        return list.get(index);
+    }
+
     public static <E, V> List<V> map(List<E> list, Function<E, V> function) {
         return list.stream().map(function).collect(Collectors.toList());
     }
@@ -23,5 +30,15 @@ public class ArrayUtils {
         for (T element : list) {
             function.apply(element);
         }
+    }
+
+    public static <T> T find(Iterable<T> list, Function<T, Boolean> function) {
+        for (T element : list) {
+            if (function.apply(element)) {
+                return element;
+            }
+        }
+
+        return null;
     }
 }

@@ -13,6 +13,11 @@ public class PlayerInventory {
 
     public void clearItem(int slot) {
         this.entity.getInventory().removeStack(slot);
+        this.entity.getInventory().updateItems();
+    }
+
+    public ItemStack getItemInMainHand() {
+        return this.entity.getInventory().getMainHandStack();
     }
 
     public void setBoots(ItemStack item) {
@@ -33,6 +38,11 @@ public class PlayerInventory {
 
     public void setItem(int slot, ItemStack item) {
         this.entity.getInventory().setStack(slot, item);
+        this.sync();
+    }
+
+    public void sync() {
+        this.entity.getInventory().updateItems();
     }
 
     public void equipArmor(ItemStack helmet, ItemStack chest, ItemStack leggings, ItemStack boots) {

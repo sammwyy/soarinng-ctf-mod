@@ -121,12 +121,6 @@ public class CTFTeam {
         player.getInventory().equipArmor(helmet, chestplate, leggings, boots);
     }
 
-    public void equipArmorAll() {
-        for (Player player : this.players) {
-            this.equipArmor(player);
-        }
-    }
-
     public Color getColor() {
         return this.color;
     }
@@ -330,10 +324,6 @@ public class CTFTeam {
         }
     }
 
-    public void teleportAllPlayersToSpawn() {
-        this.teleportAllPlayers(this.spawn);
-    }
-
     public void updateSuffix() {
         String suffix = null;
 
@@ -359,5 +349,11 @@ public class CTFTeam {
         if (save)
             team.safeSave();
         return team;
+    }
+
+    public void respawnAllPlayers() {
+        for (Player player : this.players) {
+            player.respawn();
+        }
     }
 }

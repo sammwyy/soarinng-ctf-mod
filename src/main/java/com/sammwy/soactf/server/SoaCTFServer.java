@@ -8,6 +8,7 @@ import com.sammwy.soactf.common.Initializer;
 import com.sammwy.soactf.common.utils.FabricUtils;
 import com.sammwy.soactf.common.utils.WorldUtils;
 import com.sammwy.soactf.server.commands.CTFCommand;
+import com.sammwy.soactf.server.commands.CTFLootCommand;
 import com.sammwy.soactf.server.commands.CTFTeamCommand;
 import com.sammwy.soactf.server.config.ConfigManager;
 import com.sammwy.soactf.server.config.impl.CTFArenaConfig;
@@ -18,6 +19,7 @@ import com.sammwy.soactf.server.events.player.PlayerAttackEntityEvent;
 import com.sammwy.soactf.server.events.player.PlayerBeforeDeathEvent;
 import com.sammwy.soactf.server.events.player.PlayerRespawnEvent;
 import com.sammwy.soactf.server.game.Game;
+import com.sammwy.soactf.server.loots.LootBoxManager;
 import com.sammwy.soactf.server.players.PlayerManager;
 import com.sammwy.soactf.server.tasks.TaskScheduler;
 import com.sammwy.soactf.server.teams.CTFTeamManager;
@@ -29,6 +31,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.world.World;
@@ -40,6 +43,7 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
     // Managers.
     private ConfigManager configManager;
     private EventManager eventManager;
+    private LootBoxManager lootBoxManager;
     private PlayerManager playerManager;
     private CTFTeamManager teamManager;
 
@@ -49,6 +53,10 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
 
     public EventManager getEventManager() {
         return this.eventManager;
+    }
+
+    public LootBoxManager getLootBoxManager() {
+        return this.lootBoxManager;
     }
 
     public PlayerManager getPlayerManager() {
@@ -103,10 +111,12 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
         // Instantiate managers.
         this.configManager = new ConfigManager(FabricUtils.getConfigDir(Constants.MOD_ID));
         this.eventManager = new EventManager();
+        this.lootBoxManager = new LootBoxManager(this);
         this.playerManager = new PlayerManager(this, FabricUtils.getConfigDir(Constants.MOD_ID, "players"));
         this.teamManager = new CTFTeamManager(this, FabricUtils.getConfigDir(Constants.MOD_ID, "teams"));
 
         // Load data.
+        this.lootBoxManager.load();
         this.teamManager.loadTeams();
 
         // Initialize state.
@@ -123,6 +133,7 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
         // Register commands.
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) -> {
             new CTFCommand(this).register(dispatcher);
+            new CTFLootCommand(this).register(dispatcher);
             new CTFTeamCommand(this).register(dispatcher);
         });
 
@@ -162,6 +173,7 @@ public class SoaCTFServer implements DedicatedServerModInitializer {
             }
 
             WorldUtils.setDefaultWorld(world);
+            this.lootBoxManager.resetAllCooldown();
         });
 
         // Register handlers.

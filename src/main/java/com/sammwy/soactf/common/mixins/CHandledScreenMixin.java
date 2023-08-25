@@ -10,6 +10,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
+import net.minecraft.client.gui.screen.ingame.Generic3x3ContainerScreen;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
@@ -28,8 +30,11 @@ public abstract class CHandledScreenMixin<T extends ScreenHandler> extends Scree
 
         HandledScreen<?> screen = (HandledScreen<?>) (Object) this;
         boolean isInventory = screen instanceof InventoryScreen;
+        boolean isChest = screen instanceof GenericContainerScreen;
+        boolean isDispenser = screen instanceof Generic3x3ContainerScreen;
+        boolean isAnyInventoryUI = isInventory || isChest || isDispenser;
 
-        return !isCreative && isInventory;
+        return !isCreative && isAnyInventoryUI;
     }
 
     @Inject(at = @At("HEAD"), method = "onMouseClick(Lnet/minecraft/screen/slot/Slot;IILnet/minecraft/screen/slot/SlotActionType;)V", cancellable = true)

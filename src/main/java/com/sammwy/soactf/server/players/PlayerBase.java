@@ -1,8 +1,11 @@
 package com.sammwy.soactf.server.players;
 
 import com.sammwy.soactf.common.utils.TextUtils;
+import com.sammwy.soactf.server.world.BlockPosition;
 import com.sammwy.soactf.server.world.Position;
 
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
@@ -21,6 +24,22 @@ public class PlayerBase {
         this.connection = connection;
         this.entity = entity;
         this.inventory = new PlayerInventory(entity);
+    }
+
+    public void addPotionEffect(StatusEffect effect, int duration, int amplifier, boolean showParticles) {
+        this.entity.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier, false, showParticles));
+    }
+
+    public void addPotionEffect(StatusEffect effect, int duration, int amplifier) {
+        this.addPotionEffect(effect, duration, amplifier, true);
+    }
+
+    public void addPotionEffect(StatusEffect effect, int duration) {
+        this.addPotionEffect(effect, duration, 1);
+    }
+
+    public void addPotionEffectInfinite(StatusEffect effect, int amplifier) {
+        this.addPotionEffect(effect, StatusEffectInstance.INFINITE, amplifier);
     }
 
     public ClientConnection getConnection() {
@@ -51,6 +70,10 @@ public class PlayerBase {
         return this.entity.getName().getString();
     }
 
+    public BlockPosition getBlockPosition() {
+        return new BlockPosition(this.entity.getX(), this.entity.getBlockY(), this.entity.getBlockZ());
+    }
+
     public Position getPosition() {
         return new Position(this.entity.getX(), this.entity.getY(), this.entity.getZ(), this.entity.getYaw(),
                 this.entity.getPitch());
@@ -70,6 +93,10 @@ public class PlayerBase {
 
     public void kill() {
         this.entity.kill();
+    }
+
+    public void removeStatusEffect(StatusEffect status) {
+        this.entity.removeStatusEffect(status);
     }
 
     public void sendActionBar(String message) {
@@ -93,7 +120,10 @@ public class PlayerBase {
 
         TitleFadeS2CPacket fadePacket = new TitleFadeS2CPacket(fadeInTicks, stayTicks, fadeOutTicks);
         this.entity.networkHandler.sendPacket(fadePacket);
+    }
 
+    public void setFoodLevel(int foodLevel) {
+        this.entity.getHungerManager().setFoodLevel(foodLevel);
     }
 
     public void setGameMode(GameMode mode) {

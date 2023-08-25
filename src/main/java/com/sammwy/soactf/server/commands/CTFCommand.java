@@ -62,10 +62,6 @@ public final class CTFCommand {
                 literal("ctf").requires(source -> source.hasPermissionLevel(4))
                         .then(literal("start").executes(ctx -> handleStart(ctx.getSource())))
                         .then(literal("stop").executes(ctx -> handleStop(ctx.getSource())))
-                        .then(literal("setphase")
-                                .then(argument("phase", GamePhaseType.gamePhase())
-                                        .executes(ctx -> handleSetPhase(ctx.getSource(),
-                                                GamePhaseType.getGamePhase("phase", ctx)))))
                         .then(literal("settime")
                                 .then(argument("time", IntegerArgumentType.integer(0))
                                         .executes(ctx -> handleSetTime(ctx.getSource(),

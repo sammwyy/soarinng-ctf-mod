@@ -9,6 +9,10 @@ public class WorldUtils {
         return DEFAULT_WORLD;
     }
 
+    public static boolean isDefaultWorldLoaded() {
+        return DEFAULT_WORLD != null;
+    }
+
     public static void setDefaultWorld(ServerWorld world) {
         DEFAULT_WORLD = world;
     }

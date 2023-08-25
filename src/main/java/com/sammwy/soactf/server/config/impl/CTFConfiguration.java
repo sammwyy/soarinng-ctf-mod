@@ -1,5 +1,8 @@
 package com.sammwy.soactf.server.config.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.sammwy.soactf.server.config.Configuration;
@@ -26,6 +29,10 @@ public class CTFConfiguration extends Configuration {
         @Expose // game.time
         public Time time = new Time();
 
+        @Expose // game.disable_hunger
+        @SerializedName("disable_hunger")
+        public boolean disableHunger = true;
+
         @Expose // game.fall_damage
         @SerializedName("fall_damage")
         public boolean fallDamage = false;
@@ -39,6 +46,16 @@ public class CTFConfiguration extends Configuration {
         public int jumpBoost = 1;
     }
 
+    // loot
+    public static class LootConfig {
+        @Expose // loot.items
+        public List<String> items = new ArrayList<>();
+
+        @Expose // loot.respawn_cooldown
+        @SerializedName("respawn_cooldown")
+        public int respawnCooldown = 30;
+    }
+
     // teams
     public static class TeamsConfig {
         @Expose // teams.max_players
@@ -48,6 +65,9 @@ public class CTFConfiguration extends Configuration {
 
     @Expose
     public GameConfig game = new GameConfig();
+
+    @Expose
+    public LootConfig loots = new LootConfig();
 
     @Expose
     public TeamsConfig teams = new TeamsConfig();

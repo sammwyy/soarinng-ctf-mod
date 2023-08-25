@@ -1,7 +1,6 @@
 package com.sammwy.soactf.common.utils;
 
 import com.sammwy.soactf.server.world.BlockPosition;
-import com.sammwy.soactf.server.world.Position;
 
 import net.minecraft.server.world.ServerWorld;
 
@@ -16,9 +15,5 @@ public class PositionUtils {
         }
 
         return safePosition.y >= 0 ? safePosition.add(0, 1, 0) : null;
-    }
-
-    public static BlockPosition getSafeBlockPosition(ServerWorld world, Position position) {
-        return getSafeBlockPosition(world, BlockPosition.fromBlockPos(position.toBlockPos()));
     }
 }

@@ -2,7 +2,9 @@ package com.sammwy.soactf.server.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+
 import com.sammwy.soactf.common.utils.TextUtils;
 import com.sammwy.soactf.server.SoaCTFServer;
 import com.sammwy.soactf.server.chat.Color;
@@ -61,7 +63,7 @@ public final class CTFTeamCommand {
     private int handleSetFlag(ServerCommandSource source, CTFTeam team) {
         ServerPlayerEntity entity = source.getPlayer();
         Player player = this.server.getPlayerManager().getPlayer(entity);
-        BlockPosition position = new BlockPosition(player.getPosition());
+        BlockPosition position = player.getBlockPosition();
         team.setFlagSpawn(position);
         source.sendFeedback(TextUtils.from(PREFIX + "La bandera del equipo " + team.getDisplayName()
                 + " &7ha sido colocada en &a" + position.toString() + "&7."), false);
@@ -147,6 +149,20 @@ public final class CTFTeamCommand {
         return Command.SINGLE_SUCCESS;
     }
 
+    private int handlePoints(ServerCommandSource source, CTFTeam team, int points) {
+        team.setPoints(points);
+        source.sendFeedback(
+                TextUtils.from(
+                        PREFIX + "Ahora el equipo " + team.getDisplayName() + " &7tiene &b" + points + " &7puntos."),
+                false);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int handleResetFlag(ServerCommandSource source, CTFTeam team) {
+
+        return Command.SINGLE_SUCCESS;
+    }
+
     public void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
                 literal("ctfteam").requires(source -> source.hasPermissionLevel(4))
@@ -218,6 +234,28 @@ public final class CTFTeamCommand {
                                         .suggests(TeamType
                                                 .team()::listSuggestions)
                                         .executes(ctx -> handlePlayers(
+                                                ctx.getSource(),
+                                                TeamType.getTeam("team",
+                                                        ctx)))))
+                        .then(literal("points")
+                                .then(argument("team", TeamType.team())
+                                        .suggests(TeamType
+                                                .team()::listSuggestions)
+                                        .then(argument("points",
+                                                IntegerArgumentType.integer(0))
+                                                .executes(ctx -> handlePoints(
+                                                        ctx.getSource(),
+                                                        TeamType.getTeam(
+                                                                "team",
+                                                                ctx),
+                                                        IntegerArgumentType.getInteger(ctx,
+                                                                "points"))))))
+
+                        .then(literal("resetflag")
+                                .then(argument("team", TeamType.team())
+                                        .suggests(TeamType
+                                                .team()::listSuggestions)
+                                        .executes(ctx -> handleResetFlag(
                                                 ctx.getSource(),
                                                 TeamType.getTeam("team",
                                                         ctx)))))

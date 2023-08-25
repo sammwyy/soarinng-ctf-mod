@@ -167,8 +167,7 @@ public class Game {
 
         else if (this.phase == GamePhase.IN_GAME) {
             if (team != null) {
-                player.teleport(team.getSpawn());
-                team.glow();
+                player.respawn();
                 return GameJoinResult.JOINED;
             }
         }
@@ -215,12 +214,11 @@ public class Game {
 
         if (this.phase == GamePhase.IN_GAME) {
             this.broadcastMessage(this.messages.game.started);
+            this.server.getLootBoxManager().resetAllCooldown();
 
             for (CTFTeam team : this.server.getTeamManager().getTeams()) {
-                team.teleportAllPlayersToSpawn();
+                team.respawnAllPlayers();
                 team.getFlag().spawnFlag();
-                team.equipArmorAll();
-                team.glow();
             }
         }
 
@@ -295,5 +293,7 @@ public class Game {
             player.tick();
             player.sendActionBar(this.messages.game.actionbar);
         }
+
+        this.server.getLootBoxManager().tick();
     }
 }

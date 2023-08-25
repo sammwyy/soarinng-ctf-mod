@@ -6,7 +6,9 @@
   "mixins": [],
   "client": ["CClientPlayerEntityMixin", "CHandledScreenMixin"],
   "server": [
+    "SHungerManagerMixin",
     "SLivingEntityMixin",
+    "SPlayerInventoryMixin",
     "SPlayerManagerMixin",
     "SServerPlayerInteractionManagerMixin",
     "SServerPlayNetworkHandlerMixin"

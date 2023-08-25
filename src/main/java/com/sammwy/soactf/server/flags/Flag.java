@@ -79,7 +79,7 @@ public class Flag {
         player.setCapturedFlag(null);
         this.capturedBy = null;
 
-        BlockPosition safePosition = PositionUtils.getSafeBlockPosition(this.getWorld(), player.getPosition());
+        BlockPosition safePosition = PositionUtils.getSafeBlockPosition(this.getWorld(), player.getBlockPosition());
 
         if (safePosition == null) {
             this.returnFlag();

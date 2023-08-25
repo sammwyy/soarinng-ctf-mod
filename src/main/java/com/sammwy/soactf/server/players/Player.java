@@ -12,6 +12,8 @@ import com.sammwy.soactf.server.flags.Flag;
 import com.sammwy.soactf.server.game.Game;
 import com.sammwy.soactf.server.teams.CTFTeam;
 
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -207,12 +209,18 @@ public class Player extends PlayerBase {
     }
 
     public void respawn() {
+        this.getInventory().setItem(0, new ItemStack(Items.WOODEN_SWORD, 1));
         this.setHealth(20);
+        this.setFoodLevel(20);
         this.setState(PlayerState.ALIVE);
+        this.addPotionEffectInfinite(StatusEffects.JUMP_BOOST, 1);
+        this.addPotionEffectInfinite(StatusEffects.SPEED, 1);
+
         if (this.team != null) {
             this.team.equipArmor(this);
             this.teleport(this.team.getSpawn());
         }
+
         this.respawnTime = -1;
         this.modified = true;
     }
@@ -269,10 +277,12 @@ public class Player extends PlayerBase {
         if (flag != null) {
             this.getInventory().setItem(3, flag.getItemStack());
             this.getInventory().setHelmet(flag.getItemStack());
+            this.addPotionEffectInfinite(StatusEffects.GLOWING, 1);
         } else {
             this.getInventory().clearItem(3);
             this.getInventory()
                     .setHelmet(ItemUtils.createColorizedItem(Items.LEATHER_HELMET, this.team.getColor()));
+            this.removeStatusEffect(StatusEffects.GLOWING);
         }
     }
 
